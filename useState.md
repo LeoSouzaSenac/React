@@ -12,9 +12,6 @@ O `useState` é um dos hooks mais importantes do React e permite que você adici
 A função useState retorna um array com dois elementos. 
 1-O valor atual do estado → neste caso, contador.
 2-Uma função para atualizar esse valor → neste caso, setContador.
-
-Claro! Vamos explicar **de forma didática** o que é **desestruturação de array (array destructuring)**, com exemplos simples e acessíveis — especialmente útil para iniciantes:
-
 ---
 
 ## 🎯 O que é "desestruturação de array"?
