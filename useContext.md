@@ -42,34 +42,63 @@ Para organizar corretamente, cada parte fica em seu arquivo:
 ### 1️⃣ `TemaContext.tsx`
 
 ```tsx
-import React, { createContext, useState, useContext, ReactNode } from "react";
+import React, {
+  createContext,
+  useState,
+  useContext,
+  type ReactNode,
+} from "react";
 
-// Tipo do contexto
-type TemaContextType = {
-  temaEscuro: boolean;
-  setTemaEscuro: React.Dispatch<React.SetStateAction<boolean>>;
-};
+// =====================================
+// 1️⃣ Tipo do contexto
+// =====================================
+// Interface que define **os dados que estarão disponíveis** no contexto
 
-// Criando o contexto
+interface TemaContextType {
+  temaEscuro: boolean; // verdadeiro ou falso, para indicar se o tema é escuro ou não
+  setTemaEscuro: React.Dispatch<React.SetStateAction<boolean>>; // função para alterar o valor de temaEscuro
+  // você pode usar setTemaEscuro(true) ou setTemaEscuro(prev => !prev)
+}
+
+// =====================================
+// 2️⃣ Criando o contexto
+// =====================================
+// Aqui criamos o "balde global" que vai armazenar os dados
+// Antes do Provider, o contexto está vazio, por isso usamos "undefined"
 const TemaContext = createContext<TemaContextType | undefined>(undefined);
 
-// Provider
-export const TemaProvider = ({ children }: { children: ReactNode }) => {
-  const [temaEscuro, setTemaEscuro] = useState(false);
+// =====================================
+// 3️⃣ Provider
+// =====================================
+// Provider é o componente que "fornece" os dados para todos os filhos
+// children é o que se coloca dentro de um componente no TSX
+// ReactNode é um tipo do TypeScript que representa qualquer coisa que possa aparecer dentro do TSX
+// Quando criamos o contexto, o React cria automaticamente o .Provider e o .Consumer
+export const TemaProvider = (props: { children: ReactNode }) => {
+  // useState cria o estado local do Provider
+  const [temaEscuro, setTemaEscuro] = useState(false); // começa como tema claro (false)
 
   return (
+    // TemaContext.Provider disponibiliza os dados para todos os componentes filhos
     <TemaContext.Provider value={{ temaEscuro, setTemaEscuro }}>
-      {children}
+      {props.children}
+      {/* tudo que estiver dentro do Provider vai ter acesso ao contexto */}
     </TemaContext.Provider>
   );
 };
 
-// Hook personalizado para consumir
-export const useTema = () => {
-  const context = useContext(TemaContext);
-  if (!context) throw new Error("useTema deve ser usado dentro de TemaProvider");
-  return context;
+// =====================================
+// 4️⃣ Hook personalizado para consumir
+// =====================================
+// useTema é uma função que permite qualquer componente "pegar" o contexto
+export const useTema = (): TemaContextType => {
+  const context = useContext(TemaContext); // pega o valor do contexto atual
+  if (!context)
+    // se tentar usar fora do Provider, dá erro
+    throw new Error("useTema deve ser usado dentro de TemaProvider");
+  return context; // retorna { temaEscuro, setTemaEscuro }
 };
+
 ```
 
 ---
