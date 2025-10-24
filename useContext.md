@@ -1,55 +1,59 @@
-
 # ⚛️ React – Hook `useContext`
 
-O **`useContext`** é um **hook que permite compartilhar dados entre componentes** sem precisar passar manualmente via props.
-Ele é essencial para criar **estados globais** como:
+## 🧩 O que é **Contexto**?
 
-* Tema claro/escuro
-* Usuário logado
-* Carrinho de compras
-* Preferências do app
+No React, **contexto** é uma forma de **compartilhar dados entre componentes** sem precisar passar manualmente via props de um componente pai para seus filhos, netos, bisnetos, etc.
+
+Ele serve para:
+
+* Evitar **prop drilling** (passar props por muitos níveis)
+* Criar **estados globais** acessíveis por vários componentes
+* Centralizar dados que **não dependem de um componente específico**, como:
+
+  * Tema claro/escuro
+  * Usuário logado
+  * Preferências do app
+  * Configurações de idioma
+
+O contexto funciona com **Provider** (quem fornece o dado) e **Consumer/Hook** (quem consome o dado).
 
 ---
 
-## 🧩 O que é *Prop Drilling*?
+## 📂 Estrutura de arquivos (React + TSX)
 
-**Prop Drilling** é o problema que ocorre quando você precisa **passar dados de um componente pai para componentes profundamente aninhados** apenas para que eles possam usar esses dados.
+Para organizar corretamente, cada parte fica em seu arquivo:
 
-Exemplo sem contexto:
-
-```tsx
-<App>
-  <ComponentePai>
-    <ComponenteFilho>
-      <ComponenteNeto>
-        <BotaoPrecisaDoDado />
-      </ComponenteNeto>
-    </ComponenteFilho>
-  </ComponentePai>
-</App>
+```
+/src
+  /context
+    TemaContext.tsx
+    UsuarioContext.tsx
+  /components
+    ComponenteBotao.tsx
+    Tela.tsx
+    TelaUsuario.tsx
+  App.tsx
 ```
 
-Se o `BotaoPrecisaDoDado` precisa de um dado do `<App />`, você teria que **passar props por cada nível**, mesmo que os componentes intermediários **não usem o dado**. Isso é o *prop drilling*. 😵
-
-O **`useContext`** resolve isso, permitindo que qualquer componente **consuma dados diretamente do contexto**, sem passar props manualmente.
-
 ---
 
-## 🎬 Criando um Contexto – Tema Claro/Escuro
+## 🎬 Exemplo 1 – Tema claro/escuro
+
+### 1️⃣ `TemaContext.tsx`
 
 ```tsx
-// TemaContext.tsx
 import React, { createContext, useState, useContext, ReactNode } from "react";
 
-// 1️⃣ Criando o contexto
+// Tipo do contexto
 type TemaContextType = {
   temaEscuro: boolean;
   setTemaEscuro: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
+// Criando o contexto
 const TemaContext = createContext<TemaContextType | undefined>(undefined);
 
-// 2️⃣ Criando o Provider (componente que fornece os dados)
+// Provider
 export const TemaProvider = ({ children }: { children: ReactNode }) => {
   const [temaEscuro, setTemaEscuro] = useState(false);
 
@@ -60,7 +64,7 @@ export const TemaProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// 3️⃣ Hook personalizado para consumir o contexto
+// Hook personalizado para consumir
 export const useTema = () => {
   const context = useContext(TemaContext);
   if (!context) throw new Error("useTema deve ser usado dentro de TemaProvider");
@@ -70,14 +74,13 @@ export const useTema = () => {
 
 ---
 
-## ⚡ Exemplo prático: alternando tema claro/escuro
+### 2️⃣ `ComponenteBotao.tsx`
 
 ```tsx
-// App.tsx
 import React from "react";
-import { TemaProvider, useTema } from "./TemaContext";
+import { useTema } from "../context/TemaContext";
 
-const ComponenteBotao = () => {
+export const ComponenteBotao = () => {
   const { temaEscuro, setTemaEscuro } = useTema();
 
   return (
@@ -86,8 +89,18 @@ const ComponenteBotao = () => {
     </button>
   );
 };
+```
 
-const Tela = () => {
+---
+
+### 3️⃣ `Tela.tsx`
+
+```tsx
+import React from "react";
+import { useTema } from "../context/TemaContext";
+import { ComponenteBotao } from "./ComponenteBotao";
+
+export const Tela = () => {
   const { temaEscuro } = useTema();
 
   const estilo = {
@@ -108,6 +121,16 @@ const Tela = () => {
     </div>
   );
 };
+```
+
+---
+
+### 4️⃣ `App.tsx`
+
+```tsx
+import React from "react";
+import { TemaProvider } from "./context/TemaContext";
+import { Tela } from "./components/Tela";
 
 export default function App() {
   return (
@@ -120,10 +143,11 @@ export default function App() {
 
 ---
 
-## 🔄 Exemplo 2 – Contexto de usuário logado
+## 🎬 Exemplo 2 – Usuário logado
+
+### 1️⃣ `UsuarioContext.tsx`
 
 ```tsx
-// UsuarioContext.tsx
 import React, { createContext, useState, useContext, ReactNode } from "react";
 
 type Usuario = { nome: string } | null;
@@ -151,24 +175,40 @@ export const useUsuario = () => {
 };
 ```
 
-```tsx
-// App.tsx
-import React from "react";
-import { UsuarioProvider, useUsuario } from "./UsuarioContext";
+---
 
-const TelaUsuario = () => {
+### 2️⃣ `TelaUsuario.tsx`
+
+```tsx
+import React from "react";
+import { useUsuario } from "../context/UsuarioContext";
+
+export const TelaUsuario = () => {
   const { usuario, setUsuario } = useUsuario();
 
   return (
     <div style={{ padding: "20px" }}>
       {usuario ? <p>Olá, {usuario.nome}!</p> : <p>Nenhum usuário logado</p>}
       <button onClick={() => setUsuario({ nome: "João" })}>Login como João</button>
-      <button onClick={() => setUsuario(null)} style={{ marginLeft: "10px", color: "red" }}>
+      <button
+        onClick={() => setUsuario(null)}
+        style={{ marginLeft: "10px", color: "red" }}
+      >
         Logout
       </button>
     </div>
   );
 };
+```
+
+---
+
+### 3️⃣ `App.tsx` (usuário)
+
+```tsx
+import React from "react";
+import { UsuarioProvider } from "./context/UsuarioContext";
+import { TelaUsuario } from "./components/TelaUsuario";
 
 export default function App() {
   return (
@@ -181,30 +221,11 @@ export default function App() {
 
 ---
 
-## ⚙️ Resumo rápido
+✅ Agora temos:
 
-| Conceito             | Explicação                                     |
-| -------------------- | ---------------------------------------------- |
-| Prop Drilling        | Passar props manualmente por vários níveis     |
-| Contexto (`Context`) | Permite compartilhar dados globalmente         |
-| Provider             | Componente que fornece os dados                |
-| Consumer/Hook        | Componente que consome os dados (`useContext`) |
-
----
-
-## 🧭 Conclusão
-
-O `useContext` é essencial quando você quer:
-
-* Evitar **prop drilling**
-* Ter **estados globais** ou **configurações compartilhadas**
-* Acessar e alterar dados de forma **limpa e direta**
-
-> 🔹 `useState` = cria estados locais
-> 🔹 `useEffect` = reage às mudanças
-> 🔹 `useContext` = compartilha estados globalmente
-
----
+* Cada contexto em seu arquivo (`TemaContext.tsx` / `UsuarioContext.tsx`)
+* Cada componente em seu próprio arquivo
+* `App.tsx` apenas orquestrando os Providers e as telas
+* Explicação clara sobre **contexto** e **prop drilling**
 
 
-Quer que eu faça?
